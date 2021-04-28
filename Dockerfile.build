@@ -1,5 +1,5 @@
 ARG ARCH
-FROM ${ARCH}alpine:3.13.5 AS build
+FROM mcr.microsoft.com/dotnet/runtime-deps:5.0.5-buster-slim-${ARCH} AS build
 
 ARG IMGPATH
 
@@ -13,7 +13,8 @@ ENTRYPOINT [ "./Vecc.AzSync" ]
 
 #------------------
 
-FROM ${ARCH}alpine:3.13.5
+ARG ARCH
+FROM mcr.microsoft.com/dotnet/runtime-deps:5.0.5-buster-slim-${ARCH}
 WORKDIR /app
 COPY --from=build /app /app
 ENTRYPOINT [ "./Vecc.AzSync" ]
