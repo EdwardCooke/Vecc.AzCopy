@@ -55,19 +55,19 @@ steps:
   displayName: Build Docker Images
   inputs:
     script: |
-      docker build
+      docker build \
         -t crvecc.azurecr.io/amd64/azsync:manifest-amd64 \
         -t crvecc.azurecr.io/amd64/azsync:$(Version) \
         --build-arg ARCH=amd64 \
         --build-arg IMGPATH=linux-x64 \
         -f Dockerfile.build .
-      docker build
+      docker build \
         -t crvecc.azurecr.io/arm32v7/azsync:manifest-arm32v7 \
         -t crvecc.azurecr.io/arm32v7/azsync:$(Version) \
         --build-arg ARCH=arm32v7 \
         --build-arg IMGPATH=linux-arm \
         -f Dockerfile.build .
-      docker build
+      docker build \
         -t crvecc.azurecr.io/arm32v7/azsync:manifest-arm64v8 \
         -t crvecc.azurecr.io/arm32v7/azsync:$(Version) \
         --build-arg ARCH=arm64v8 \
