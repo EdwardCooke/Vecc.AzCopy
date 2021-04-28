@@ -1,0 +1,106 @@
+trigger:
+- master
+
+resources:
+- repo: self
+
+variables:
+  Version.MajorMinor: 1.0
+  Version.Revision: $[counter(variables['Version.MajorMinor'], 0)]
+  Version: $(Version.MajorMinor).$(Version.Revision)
+
+name: $(Version.MajorMinor).$(Version.Revision)
+
+steps:
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'restore'
+    projects: '**/*.csproj'
+
+- task: DotNetCoreCLI@2
+  displayName: Publish linux-arm64
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    projects: 'src/Vecc.AzSync/Vecc.AzSync.csproj'
+    arguments: '-c Release -r linux-arm64 -p:PublishSingleFile=true'
+    zipAfterPublish: false
+
+- task: DotNetCoreCLI@2
+  displayName: Publish linux-arm
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    projects: 'src/Vecc.AzSync/Vecc.AzSync.csproj'
+    arguments: '-c Release -r linux-arm -p:PublishSingleFile=true'
+    zipAfterPublish: false
+
+- task: DotNetCoreCLI@2
+  displayName: Publish linux-x64
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    projects: 'src/Vecc.AzSync/Vecc.AzSync.csproj'
+    arguments: '-c Release -r linux-x64 -p:PublishSingleFile=true'
+    zipAfterPublish: false
+
+- task: Docker@2
+  displayName: Docker Login
+  inputs:
+    containerRegistry: 'crvecc.azurecr.io-Vecc.AzSync'
+    command: 'login'
+
+- task: CmdLine@2
+  displayName: Build Docker Images
+  inputs:
+    script: |
+      docker build
+        -t crvecc.azurecr.io/amd64/azsync:manifest-amd64 \
+        -t crvecc.azurecr.io/amd64/azsync:$(Version) \
+        --build-arg ARCH=amd64/ \
+        --build-arg IMGPATH=linux-x64 \
+        -f Dockerfile.build .
+      docker build
+        -t crvecc.azurecr.io/arm32v7/azsync:manifest-arm32v7 \
+        -t crvecc.azurecr.io/arm32v7/azsync:$(Version) \
+        --build-arg ARCH=arm32v7/ \
+        --build-arg IMGPATH=linux-arm \
+        -f Dockerfile.build .
+      docker build
+        -t crvecc.azurecr.io/arm32v7/azsync:manifest-arm64v8 \
+        -t crvecc.azurecr.io/arm32v7/azsync:$(Version) \
+        --build-arg ARCH=arm64v8/ \
+        --build-arg IMGPATH=linux-arm64 \
+        -f Dockerfile.build .
+
+- task: CmdLine@2
+  displayName: Push Docker Images
+  inputs:
+    script: |
+      docker image push --all-tags crvecc.azurecr.io/amd64/azsync
+      docker image push --all-tags crvecc.azurecr.io/arm32v7/azsync
+      docker image push --all-tags crvecc.azurecr.io/arm64v8/azsync
+
+- task: CmdLine@2
+  displayName: Build Multi-arch image manifests
+  inputs:
+    script: |
+      docker manifest create \
+          crvecc.azurecr.io/azsync:latest \
+          --amend crvecc.azurecr.io/amd64/azsync:$(Version) \
+          --amend crvecc.azurecr.io/arm32v7/azsync:$(Version) \
+          --amend crvecc.azurecr.io/arm64v8/azsync:$(Version)
+      docker manifest create \
+          crvecc.azurecr.io/azsync:$(Version) \
+          --amend crvecc.azurecr.io/amd64/azsync:$(Version) \
+          --amend crvecc.azurecr.io/arm32v7/azsync:$(Version) \
+          --amend crvecc.azurecr.io/arm64v8/azsync:$(Version)
+
+- task: CmdLine@2
+  displayName: Push Multi-arch image manifests
+  inputs:
+    script: |
+      docker manifest push \
+          crvecc.azurecr.io/azsync:latest \
+          crvecc.azurecr.io/azsync:$(Version)

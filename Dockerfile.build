@@ -1,0 +1,19 @@
+ARG ARCH
+FROM ${ARCH}alpine:3.13.5 AS build
+
+ARG IMGPATH
+
+WORKDIR /app
+
+COPY Vecc.AzSync/bin/Release/net5.0/${IMGPATH}/publish/Vecc.AzSync /app
+
+RUN chmod +x ./Vecc.AzSync
+
+ENTRYPOINT [ "./Vecc.AzSync" ]
+
+#------------------
+
+FROM ${ARCH}alpine:3.13.5
+WORKDIR /app
+COPY --from=build /app /app
+ENTRYPOINT [ "./Vecc.AzSync" ]
