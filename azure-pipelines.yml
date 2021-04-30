@@ -57,20 +57,17 @@ steps:
     script: |
       docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
       docker build \
-        -t crvecc.azurecr.io/amd64/azsync:manifest-amd64 \
-        -t crvecc.azurecr.io/amd64/azsync:$(Version) \
+        -t crvecc.azurecr.io/azsync:$(Version)-amd64 \
         --build-arg ARCH=amd64 \
         --build-arg IMGPATH=linux-x64 \
         -f Dockerfile.build .
       docker build \
-        -t crvecc.azurecr.io/arm32v7/azsync:manifest-arm32v7 \
-        -t crvecc.azurecr.io/arm32v7/azsync:$(Version) \
+        -t crvecc.azurecr.io/azsync:$(Version)-arm
         --build-arg ARCH=arm32v7 \
         --build-arg IMGPATH=linux-arm \
         -f Dockerfile.build .
       docker build \
-        -t crvecc.azurecr.io/arm64v8/azsync:manifest-arm64v8 \
-        -t crvecc.azurecr.io/arm64v8/azsync:$(Version) \
+        -t crvecc.azurecr.io/azsync:$(Version)-arm64 \
         --build-arg ARCH=arm64v8 \
         --build-arg IMGPATH=linux-arm64 \
         -f Dockerfile.build .
@@ -79,9 +76,9 @@ steps:
   displayName: Push Docker Images
   inputs:
     script: |
-      docker image push --all-tags crvecc.azurecr.io/amd64/azsync
-      docker image push --all-tags crvecc.azurecr.io/arm32v7/azsync
-      docker image push --all-tags crvecc.azurecr.io/arm64v8/azsync
+      docker image push --all-tags crvecc.azurecr.io/azsync:$(Version)-amd64
+      docker image push --all-tags crvecc.azurecr.io/azsync:$(Version)-arm
+      docker image push --all-tags crvecc.azurecr.io/azsync:$(Version)-arm64
 
 - task: CmdLine@2
   displayName: Build Multi-arch image manifests
@@ -89,14 +86,14 @@ steps:
     script: |
       docker manifest create \
           crvecc.azurecr.io/azsync:latest \
-          --amend crvecc.azurecr.io/amd64/azsync:$(Version) \
-          --amend crvecc.azurecr.io/arm32v7/azsync:$(Version) \
-          --amend crvecc.azurecr.io/arm64v8/azsync:$(Version)
+          --amend crvecc.azurecr.io/azsync:$(Version)-amd64 \
+          --amend crvecc.azurecr.io/azsync:$(Version)-arm\
+          --amend crvecc.azurecr.io/azsync:$(Version)-arm64
       docker manifest create \
           crvecc.azurecr.io/azsync:$(Version) \
-          --amend crvecc.azurecr.io/amd64/azsync:$(Version) \
-          --amend crvecc.azurecr.io/arm32v7/azsync:$(Version) \
-          --amend crvecc.azurecr.io/arm64v8/azsync:$(Version)
+          --amend crvecc.azurecr.io/azsync:$(Version)-amd64 \
+          --amend crvecc.azurecr.io/azsync:$(Version)-arm \
+          --amend crvecc.azurecr.io/azsync:$(Version)-arm64
 
 - task: CmdLine@2
   displayName: Push Multi-arch image manifests
