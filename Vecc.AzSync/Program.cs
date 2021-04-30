@@ -34,12 +34,12 @@ namespace Vecc.AzSync
                 Console.WriteLine(" --sourcePath        The source of files to sync, these will be placed in the target container url. For example, /data");
                 Console.WriteLine(" --targetContainer   That URL to container where to place the files.");
                 Console.WriteLine("                     Example: https://storageaccount.blob.core.windows.net/container");
-                Console.WriteLine("--sasToken           The SAS token to use to connect to the blob storage container.");
+                Console.WriteLine("- -sasToken          The SAS token to use to connect to the blob storage container.");
                 Console.WriteLine("                     The following options need to be enabled for this to be succesful.");
                 Console.WriteLine("                     Read, Add, Create, Write, Delete, List");
-                Console.WriteLine("--targetPath         Optional. Defines the path inside of the container to store the files.");
+                Console.WriteLine(" --targetPath        Optional. Defines the path inside of the container to store the files.");
                 Console.WriteLine("                     If omitted it will store them in the root of the container.");
-                Console.WriteLine("--dryRun             Optional. If set to true then no operations will be performed on the containter.");
+                Console.WriteLine(" --dryRun            Optional. If set to true then no operations will be performed on the containter.");
                 Console.WriteLine("                     It will only show what is going to be done.");
 
                 Environment.Exit(-1);
