@@ -102,6 +102,5 @@ steps:
   displayName: Push Multi-arch image manifests
   inputs:
     script: |
-      docker manifest push \
-          crvecc.azurecr.io/azsync:latest \
-          crvecc.azurecr.io/azsync:$(Version)
+      docker manifest push crvecc.azurecr.io/azsync:latest
+      docker manifest push crvecc.azurecr.io/azsync:$(Version)
