@@ -24,7 +24,6 @@ namespace Vecc.AzSync
             var sasToken = configuration["sasToken"];
             var targetPath = configuration["targetPath"] ?? string.Empty;
             var dryRun = configuration["dryRun"] == "true";
-            Console.CursorVisible = false;
 
             if (string.IsNullOrWhiteSpace(sourcePath) ||
                 string.IsNullOrWhiteSpace(targetContainer) ||
@@ -45,57 +44,68 @@ namespace Vecc.AzSync
                 Environment.Exit(-1);
             }
 
-            var containerClient = new BlobContainerClient(new Uri(targetContainer),
-                new Azure.AzureSasCredential(sasToken));
-
-            Console.WriteLine("Getting current source files and target blobs");
-
-            var blobTask = GetCurrentBlobsAsync(containerClient);
-            var fileTask = GetCurrentFileSystemFilesAsync(sourcePath, targetPath);
-
-            await Task.WhenAll(blobTask, fileTask);
-
-            Console.WriteLine("Done getting source files and target blobs");
-
-            var fileDictionary = fileTask.Result.ToDictionary(x => x.Name);
-            var blobDictionary = blobTask.Result.ToDictionary(x => x.Name);
-
-            Console.WriteLine("Source file count: {0}", fileDictionary.Count);
-            Console.WriteLine("Target blob count: {0}", blobDictionary.Count);
-
-            var filesToUpload = fileTask.Result.Where(file => ShouldUpload(file, blobDictionary)).ToArray();
-            var filesToDelete = blobTask.Result.Where(blob => !fileDictionary.ContainsKey(blob.Name)).ToArray();
-
-            Console.WriteLine("Upload count: {0}", filesToUpload.Length);
-            Console.WriteLine("Upload byte count: {0}", filesToUpload.Sum(x => x.Size).ToString("###,###,###,###,###"));
-            Console.WriteLine("Delete count: {0}", filesToDelete.Length);
-            Console.WriteLine("=======================================");
-
-            if (filesToUpload.Length > 0)
+            Console.CursorVisible = false;
+            try
             {
-                Console.WriteLine("Uploading...");
-                foreach (var file in filesToUpload)
+                var containerClient = new BlobContainerClient(new Uri(targetContainer),
+                    new Azure.AzureSasCredential(sasToken));
+
+                Console.WriteLine("Getting current source files and target blobs");
+
+                var blobTask = GetCurrentBlobsAsync(containerClient);
+                var fileTask = GetCurrentFileSystemFilesAsync(sourcePath, targetPath);
+
+                await Task.WhenAll(blobTask, fileTask);
+
+                Console.WriteLine("Done getting source files and target blobs");
+
+                var fileDictionary = fileTask.Result.ToDictionary(x => x.Name);
+                var blobDictionary = blobTask.Result.ToDictionary(x => x.Name);
+
+                Console.WriteLine("Source file count: {0}", fileDictionary.Count);
+                Console.WriteLine("Target blob count: {0}", blobDictionary.Count);
+
+                var filesToUpload = fileTask.Result.Where(file => ShouldUpload(file, blobDictionary)).ToArray();
+                var filesToDelete = blobTask.Result.Where(blob => !fileDictionary.ContainsKey(blob.Name)).ToArray();
+
+                Console.WriteLine("Upload count: {0}", filesToUpload.Length);
+                Console.WriteLine("Upload byte count: {0}", filesToUpload.Sum(x => x.Size).ToString("###,###,###,###,###"));
+                Console.WriteLine("Delete count: {0}", filesToDelete.Length);
+                Console.WriteLine("=======================================");
+
+                if (filesToUpload.Length > 0)
                 {
-                    UploadBlob(containerClient, file, dryRun);
+                    Console.WriteLine("Uploading...");
+                    foreach (var file in filesToUpload)
+                    {
+                        UploadBlob(containerClient, file, dryRun);
+                    }
                 }
-            }
 
-            if (filesToDelete.Length > 0)
-            {
-                Console.WriteLine("Downloading...");
-                foreach (var blob in filesToDelete)
+                if (filesToDelete.Length > 0)
                 {
-                    DeleteBlob(containerClient, blob.Name, dryRun);
+                    Console.WriteLine("Downloading...");
+                    foreach (var blob in filesToDelete)
+                    {
+                        DeleteBlob(containerClient, blob.Name, dryRun);
+                    }
                 }
-            }
 
-            if (filesToUpload.Length == 0 && filesToDelete.Length == 0)
+                if (filesToUpload.Length == 0 && filesToDelete.Length == 0)
+                {
+                    Console.WriteLine("Nothing to do, destination is already in sync.");
+                }
+
+                Console.WriteLine("=======================================");
+                Console.WriteLine("Complete");
+                Console.CursorVisible = true;
+            }
+            catch (Exception exception)
             {
-                Console.WriteLine("Nothing to do, destination is already in sync.");
+                Console.Error.WriteLine("Unexpected error: {0}", exception);
+                Console.CursorVisible = true;
+                Environment.Exit(-1);
             }
-
-            Console.WriteLine("=======================================");
-            Console.WriteLine("Complete");
         }
 
         private static void DeleteBlob(BlobContainerClient containerClient, string path, bool dryRun)
