@@ -76,9 +76,7 @@ steps:
   displayName: Push Docker Images
   inputs:
     script: |
-      docker image push --all-tags crvecc.azurecr.io/azsync:$(Version)-amd64
-      docker image push --all-tags crvecc.azurecr.io/azsync:$(Version)-arm
-      docker image push --all-tags crvecc.azurecr.io/azsync:$(Version)-arm64
+      docker image push --all-tags crvecc.azurecr.io/azsync
 
 - task: CmdLine@2
   displayName: Build Multi-arch image manifests
