@@ -62,7 +62,7 @@ steps:
         --build-arg IMGPATH=linux-x64 \
         -f Dockerfile.build .
       docker build \
-        -t crvecc.azurecr.io/azsync:$(Version)-arm
+        -t crvecc.azurecr.io/azsync:$(Version)-arm \
         --build-arg ARCH=arm32v7 \
         --build-arg IMGPATH=linux-arm \
         -f Dockerfile.build .
@@ -87,7 +87,7 @@ steps:
       docker manifest create \
           crvecc.azurecr.io/azsync:latest \
           --amend crvecc.azurecr.io/azsync:$(Version)-amd64 \
-          --amend crvecc.azurecr.io/azsync:$(Version)-arm\
+          --amend crvecc.azurecr.io/azsync:$(Version)-arm \
           --amend crvecc.azurecr.io/azsync:$(Version)-arm64
       docker manifest create \
           crvecc.azurecr.io/azsync:$(Version) \
